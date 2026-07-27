@@ -1,3 +1,4 @@
+import ntpath
 import os
 import re
 import shutil
@@ -84,13 +85,30 @@ def redirect_paths(document: str, document_path: str, resource_dir: str = ".") -
     return str(soup)
 
 
-def copy_assets(document: str, target_dir: str) -> str:
+def _is_windows_absolute_path(path: str) -> bool:
+    """Return whether path is an absolute Windows drive or UNC path."""
+    drive, _ = ntpath.splitdrive(path)
+    has_drive_letter = len(drive) == 2 and drive[1] == ":"
+    return (has_drive_letter and ntpath.isabs(path)) or path.startswith("\\")
+
+
+def _is_external_url(path: str) -> bool:
+    """Return whether path has a URL scheme and is not a Windows file path."""
+    parsed = urlparse(path)
+    return bool(parsed.netloc) or (
+        bool(parsed.scheme) and not _is_windows_absolute_path(path)
+    )
+
+
+def copy_assets(document: str, target_dir: str, url_prefix: str | None = None) -> str:
     """
-    Copy all asset resources in an HTML document to target_dir, then update URLs to target_dir/uuid_originalname.ext
-    Handles encoded URLs.
+    Copy all asset resources in an HTML document to target_dir, then update URLs
+    to target_dir/uuid_originalname.ext or url_prefix/uuid_originalname.ext.
+    Handles encoded URLs and Windows absolute paths.
 
     :param document: HTML document to process
     :param target_dir: Target directory
+    :param url_prefix: Optional browser-facing URL prefix for copied assets
     :return: Updated document with URLs redirected
     """
     if not os.path.exists(target_dir):
@@ -117,12 +135,19 @@ def copy_assets(document: str, target_dir: str) -> str:
                 # Decode the URL
                 decoded_path = unquote(original_path)
 
-                # Skip if it's an external URL
-                if urlparse(decoded_path).scheme:
+                # A Windows drive letter is parsed as a URL scheme (for example,
+                # urlparse(r"D:\image.png").scheme == "d"), but it still refers
+                # to a local file and should be copied.
+                if _is_external_url(decoded_path):
                     continue
 
-                # Convert to absolute path if it's relative
-                absolute_path = os.path.abspath(decoded_path)
+                # Preserve Windows absolute paths even when this code is tested
+                # or inspected on another operating system.
+                absolute_path = (
+                    decoded_path
+                    if _is_windows_absolute_path(decoded_path)
+                    else os.path.abspath(decoded_path)
+                )
 
                 # Skip if it's not a file
                 if not os.path.isfile(absolute_path):
@@ -130,7 +155,10 @@ def copy_assets(document: str, target_dir: str) -> str:
 
                 if original_path not in path_mapping:
                     # Generate a new filename
-                    original_filename = os.path.basename(absolute_path)
+                    path_module = (
+                        ntpath if _is_windows_absolute_path(absolute_path) else os.path
+                    )
+                    original_filename = path_module.basename(absolute_path)
                     name, ext = os.path.splitext(original_filename)
                     new_filename = f"{str(uuid.uuid4())[:8]}_{name}{ext}"
                     new_path = os.path.join(target_dir, new_filename)
@@ -139,7 +167,11 @@ def copy_assets(document: str, target_dir: str) -> str:
                     shutil.copy2(absolute_path, new_path)
 
                     # Store the mapping
-                    path_mapping[original_path] = new_path
+                    if url_prefix is None:
+                        new_url = new_path
+                    else:
+                        new_url = f"{url_prefix.rstrip('/')}/{new_filename}"
+                    path_mapping[original_path] = new_url
 
                 # Update the attribute with the new path
                 element[attr] = quote(path_mapping[original_path])

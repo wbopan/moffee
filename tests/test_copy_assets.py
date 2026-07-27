@@ -8,6 +8,7 @@ from urllib.parse import quote
 from moffee.utils.file_helper import (
     copy_assets,
 )
+from moffee.utils import file_helper
 
 
 @pytest.fixture
@@ -221,3 +222,32 @@ def test_copy_assets_handles_encoded_urls(setup_file_with_spaces):
 
     # Verify that the original file name (with spaces) is not in the updated document
     assert sample_file_name not in updated_doc
+
+
+def test_copy_assets_handles_windows_absolute_paths(monkeypatch, tmp_path):
+    windows_path = r"D:\AAAwork\科研\notes\assets\example.png"
+    target_dir = tmp_path / "assets"
+    copied_paths = []
+
+    monkeypatch.setattr(
+        file_helper.os.path,
+        "isfile",
+        lambda path: path == windows_path,
+    )
+    monkeypatch.setattr(
+        file_helper.shutil,
+        "copy2",
+        lambda source, target: copied_paths.append((source, target)),
+    )
+
+    updated_doc = copy_assets(
+        f'<img src="{windows_path}">',
+        str(target_dir),
+        url_prefix="assets",
+    )
+
+    assert len(copied_paths) == 1
+    assert copied_paths[0][0] == windows_path
+    assert 'src="assets/' in updated_doc
+    assert updated_doc.endswith('_example.png"/>')
+    assert "D:" not in updated_doc

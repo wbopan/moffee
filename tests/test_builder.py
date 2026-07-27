@@ -93,6 +93,8 @@ def test_build(setup_test_env):
     assert len(asset_dir) == 2
     for name in asset_dir:
         assert name in output_html
+        assert f"assets/{name}" in output_html
+    assert temp_dir not in output_html
 
     # use beamer css
     with open(j(output_dir, "css", "extension.css"), encoding="utf8") as f:

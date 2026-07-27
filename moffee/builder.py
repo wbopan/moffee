@@ -106,7 +106,7 @@ def build(
     output_html = redirect_paths(
         output_html, document_path=document_path, resource_dir=options.resource_dir
     )
-    output_html = copy_assets(output_html, asset_dir).replace(asset_dir, "assets")
+    output_html = copy_assets(output_html, asset_dir, url_prefix="assets")
 
     output_file = os.path.join(output_dir, f"index.html")
     with open(output_file, "w", encoding="utf-8") as f:
