@@ -1,7 +1,6 @@
 from moffee import __version__
 import click
 import os
-from functools import partial
 from moffee.builder import build, read_options
 from livereload import Server
 import tempfile
@@ -12,25 +11,44 @@ def run(md, output=None, live=False):
     if not os.path.exists(md):
         click.echo(f"Error: Markdown file '{md}' does not exist.", err=True)
         raise click.Abort()
-    
+
     if not output:
         output = tempfile.mkdtemp()
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
     options = read_options(md)
     base_template_dir = os.path.join(template_dir, "base")
     theme_template_dir = os.path.join(template_dir, options.theme)
-    
+
     if not os.path.exists(theme_template_dir):
-        click.echo(f"Error: Theme '{options.theme}' not found in templates directory.", err=True)
+        click.echo(
+            f"Error: Theme '{options.theme}' not found in templates directory.",
+            err=True,
+        )
         click.echo(f"Available themes: {', '.join(os.listdir(template_dir))}", err=True)
         raise click.Abort()
-    render_handler = partial(
-        build,
-        document_path=md,
-        output_dir=output,
-        template_dir=base_template_dir,
-        theme_dir=theme_template_dir,
-    )
+
+    def render_handler():
+        """Re-read the theme from frontmatter on every (re)build so that
+        changes to the ``theme`` option take effect in live mode without a restart."""
+        current_options = read_options(md)
+        current_theme_dir = os.path.join(template_dir, current_options.theme)
+        if not os.path.exists(current_theme_dir):
+            click.echo(
+                f"Error: Theme '{current_options.theme}' not found in templates directory.",
+                err=True,
+            )
+            try:
+                available = ", ".join(os.listdir(template_dir))
+            except OSError:
+                available = "none"
+            click.echo(f"Available themes: {available}", err=True)
+            return
+        build(
+            document_path=md,
+            output_dir=output,
+            template_dir=base_template_dir,
+            theme_dir=current_theme_dir,
+        )
 
     render_handler()
     print(f"Generated html written to {os.path.join(output, 'index.html')}")
