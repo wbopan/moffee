@@ -26,6 +26,7 @@ class PageOption:
     default_h2: bool = True
     default_h3: bool = True
     theme: str = "default"
+    lang: str = "en"
     aspect_ratio: str = DEFAULT_ASPECT_RATIO
     slide_width: int = DEFAULT_SLIDE_WIDTH
     slide_height: int = DEFAULT_SLIDE_HEIGHT
@@ -34,7 +35,7 @@ class PageOption:
     styles: dict = field(default_factory=dict)
 
     @property
-    def computed_slide_size(self) -> Tuple[int, int]:
+    def computed_slide_size(self) -> tuple[float, float]:
         changed_ar = self.aspect_ratio != DEFAULT_ASPECT_RATIO
         changed_w = self.slide_width != DEFAULT_SLIDE_WIDTH
         changed_h = self.slide_height != DEFAULT_SLIDE_HEIGHT
@@ -84,9 +85,9 @@ class Alignment:
 class Chunk:
     paragraph: Optional[str] = None
     children: Optional[List["Chunk"]] = field(default_factory=list)  # List of chunks
-    direction: Direction = Direction.HORIZONTAL
-    type: Type = Type.PARAGRAPH
-    alignment: Alignment = Alignment.LEFT
+    direction: str = Direction.HORIZONTAL
+    type: str = Type.PARAGRAPH
+    alignment: str = Alignment.LEFT
 
 
 @dataclass

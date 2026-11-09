@@ -1,10 +1,11 @@
-from typing import List
 import os
+
 from jinja2 import Environment, FileSystemLoader
+
 from moffee.compositor import Page, PageOption, composite, parse_frontmatter
 from moffee.markdown import md
+from moffee.utils.file_helper import copy_assets, merge_directories, redirect_paths
 from moffee.utils.md_helper import extract_title
-from moffee.utils.file_helper import redirect_paths, copy_assets, merge_directories
 
 
 def read_options(document_path) -> PageOption:
@@ -15,7 +16,7 @@ def read_options(document_path) -> PageOption:
     return options
 
 
-def retrieve_structure(pages: List[Page]) -> dict:
+def retrieve_structure(pages: list[Page]) -> dict:
     current_h1 = None
     current_h2 = None
     current_h3 = None
@@ -73,6 +74,7 @@ def render_jinja2(document: str, template_dir) -> str:
 
     data = {
         "title": title,
+        "lang": options.lang,
         "struct": slide_struct,
         "slide_width": width,
         "slide_height": height,
@@ -93,7 +95,7 @@ def render_jinja2(document: str, template_dir) -> str:
 
 
 def build(
-    document_path: str, output_dir: str, template_dir: str, theme_dir: str = None
+    document_path: str, output_dir: str, template_dir: str, theme_dir: str = None  # type: ignore[assignment]
 ):
     """Render document, create output directories and write result html."""
     with open(document_path, encoding="utf8") as f:
