@@ -19,3 +19,9 @@ theme: theme_name
 ```
 
 Replace `theme_name` with your chosen theme (default, beam, robo, blue, or gaia).
+
+The default font stack uses Inter if installed, then the viewing system's UI
+font. The browser also selects system fallback fonts for characters missing
+from the chosen font, including CJK text. This does not download or bundle
+fonts; the available fonts depend on the viewing system. Individual themes can
+use their own fonts.
