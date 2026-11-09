@@ -8,6 +8,7 @@ moffee's behavior can be customized using front matter at the beginning of your 
 |--------|-------------|---------------|-------------------|
 | [theme](theme.md) | Visual theme for the presentation | default | default, beam, robo, blue, gaia |
 | layout | HTML template for slide layout | content | content, centered |
+| lang | Document language (front matter only) | en | BCP 47 language tag, e.g. zh-Hans, ja, ko |
 | resource_dir | Base directory for relative URLs | . (current directory) | Any valid directory path |
 | default_h1 | Inherit H1 from previous slides if not defined | false | true, false |
 | default_h2 | Inherit H2 from previous slides if not defined | true | true, false |
@@ -21,6 +22,7 @@ moffee's behavior can be customized using front matter at the beginning of your 
 ```yaml
 ---
 theme: default
+lang: en
 layout: content
 resource_dir: "."
 default_h1: false

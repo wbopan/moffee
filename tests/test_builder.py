@@ -99,6 +99,23 @@ def test_build(setup_test_env):
         assert len(f.readlines()) > 2
 
 
+@pytest.mark.parametrize("lang", ["zh-Hans", "zh-Hant", "ja", "ko"])
+def test_document_language(lang):
+    html = render_jinja2(f"---\nlang: {lang}\n---\n\n# 标题", template_dir())
+    assert f'<html lang="{lang}">' in html
+    assert "lang:" not in html
+
+
+def test_document_language_default_and_escaping():
+    html = render_jinja2("# Title", template_dir())
+    assert '<html lang="en">' in html
+
+    html = render_jinja2(
+        "---\nlang: 'en\" onclick=\"evil'\n---\n\n# Title", template_dir()
+    )
+    assert '<html lang="en&#34; onclick=&#34;evil">' in html
+
+
 def test_retrieve_structure():
     doc = """
 # Title
