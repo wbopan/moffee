@@ -99,6 +99,20 @@ def test_build(setup_test_env):
         assert len(f.readlines()) > 2
 
 
+def test_default_font_and_multilingual_content(tmp_path):
+    document = tmp_path / "slides.md"
+    document.write_text(
+        "# 中文标题\n\n你好！こんにちは。안녕하세요. Hello.\n", encoding="utf8"
+    )
+    output = tmp_path / "output"
+    build(str(document), str(output), template_dir(), template_dir("default"))
+
+    html = (output / "index.html").read_text(encoding="utf8")
+    css = (output / "css" / "styles.css").read_text(encoding="utf8")
+    assert "你好！こんにちは。안녕하세요. Hello." in html
+    assert "font-family: Inter, system-ui, sans-serif;" in css
+
+
 def test_retrieve_structure():
     doc = """
 # Title
