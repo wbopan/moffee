@@ -1,10 +1,12 @@
-from typing import List
 import os
+from urllib.parse import quote
+
 from jinja2 import Environment, FileSystemLoader
+
 from moffee.compositor import Page, PageOption, composite, parse_frontmatter
 from moffee.markdown import md
+from moffee.utils.file_helper import copy_assets, merge_directories, redirect_paths
 from moffee.utils.md_helper import extract_title
-from moffee.utils.file_helper import redirect_paths, copy_assets, merge_directories
 
 
 def read_options(document_path) -> PageOption:
@@ -15,7 +17,7 @@ def read_options(document_path) -> PageOption:
     return options
 
 
-def retrieve_structure(pages: List[Page]) -> dict:
+def retrieve_structure(pages: list[Page]) -> dict:
     current_h1 = None
     current_h2 = None
     current_h3 = None
@@ -93,7 +95,7 @@ def render_jinja2(document: str, template_dir) -> str:
 
 
 def build(
-    document_path: str, output_dir: str, template_dir: str, theme_dir: str = None
+    document_path: str, output_dir: str, template_dir: str, theme_dir: str = None  # type: ignore[assignment]
 ):
     """Render document, create output directories and write result html."""
     with open(document_path, encoding="utf8") as f:
@@ -106,7 +108,9 @@ def build(
     output_html = redirect_paths(
         output_html, document_path=document_path, resource_dir=options.resource_dir
     )
-    output_html = copy_assets(output_html, asset_dir).replace(asset_dir, "assets")
+    output_html = copy_assets(output_html, asset_dir).replace(
+        quote(asset_dir), "assets"
+    )
 
     output_file = os.path.join(output_dir, f"index.html")
     with open(output_file, "w", encoding="utf-8") as f:

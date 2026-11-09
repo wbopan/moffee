@@ -99,6 +99,25 @@ def test_build(setup_test_env):
         assert len(f.readlines()) > 2
 
 
+def test_build_image_with_spaces_in_output_path(tmp_path):
+    from urllib.parse import unquote
+
+    document = tmp_path / "slides.md"
+    image = tmp_path / "image with spaces.png"
+    image.write_bytes(b"image content")
+    document.write_text("# Title\n\n![example](image%20with%20spaces.png)\n")
+    output = tmp_path / "output with spaces"
+
+    build(str(document), str(output), template_dir(), template_dir("default"))
+
+    html = (output / "index.html").read_text(encoding="utf8")
+    match = re.search(r'<img\b[^>]*src="([^"]+)"', html)
+    assert match is not None
+    src = match.group(1)
+    assert src.startswith("assets/")
+    assert (output / unquote(src)).read_bytes() == image.read_bytes()
+
+
 def test_retrieve_structure():
     doc = """
 # Title
