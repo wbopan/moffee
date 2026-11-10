@@ -43,11 +43,11 @@ def retrieve_structure(pages: List[Page]) -> dict:
             last_h3_idx = len(headings)
             headings.append({"level": 3, "content": page.h3, "page_ids": []})
 
-        if page.h1 or page.h2 or page.h3:
+        if (page.h1 or page.h2 or page.h3) and last_h1_idx >= 0:
             headings[last_h1_idx]["page_ids"].append(i)
-        if page.h2 or page.h3:
+        if (page.h2 or page.h3) and last_h2_idx >= 0:
             headings[last_h2_idx]["page_ids"].append(i)
-        if page.h3:
+        if page.h3 and last_h3_idx >= 0:
             headings[last_h3_idx]["page_ids"].append(i)
 
         page_meta.append({"h1": current_h1, "h2": current_h2, "h3": current_h3})
